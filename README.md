@@ -21,6 +21,6 @@ plus
 
 ###What did it start from?
 
-Brian Cray's [full config support](https://github.com/amdjs/amdjs-api/wiki/Common-Config)
+Brian Cray's [tinyAMD](https://github.com/briancray/tinyamd)
 
-And a desire to introduce into a big and complex not-very-modular application concept of dependencies.
+And a desire to introduce into a big and complex somewhat-modular application concept of dependencies.
