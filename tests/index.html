@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
 <title>AMD</title>
+  <script type="text/javascript" src="tinyamdx.js"></script>  
+  <script type="text/javascript">
+    define('globals', function() {
+      tinyamd.shim('jquery', '$');
+    });
+  </script>
 </head>
 <body>
-<script data-main="main" type="text/javascript" src="tinyamd.js"></script>
+  
+  <script type="text/javascript" src="main.js"></script>    
+  <script type="text/javascript" src="module1.js"></script>    
+  <script type="text/javascript" src="module2.js"></script>    
+  <script type="text/javascript" src="module3.js"></script>    
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>    
 </body>
 </html>
