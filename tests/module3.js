@@ -1,3 +1,3 @@
-define({
-    name: 'haha'
+define('module3', {
+    name: '42'
 });

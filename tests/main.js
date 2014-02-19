@@ -1,3 +1,5 @@
-require('module1', function (module1) {
-    module1.output();
+define('main', ['module1', 'jquery'], function (module1, $) {
+  $(document).ready(function() {  
+      $("#result").text(module1.output());
+  });
 });
