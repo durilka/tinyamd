@@ -26,6 +26,9 @@ It's a mashup from the tests, btw.
 
 in your html:
 ```html
+<head data-main="globals"> <!-- this indicates what module tinyAMDx will load first -->
+...
+  <!-- load those earliest possible -->
   <script type="text/javascript" src="tinyamdx.js"></script>  
   <script type="text/javascript">
     define('globals', function() {
