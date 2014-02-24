@@ -1,0 +1,1 @@
+../tinyamdx.js
