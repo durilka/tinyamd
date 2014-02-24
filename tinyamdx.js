@@ -1,38 +1,11 @@
 ; (function (global, undefined) {
     "use strict";
 
-    var doc = document;
-    var el_head = doc.head || doc.getElementsByTagName("head")[0] || doc.documentElement;
-    var node = (function (scripts) {
-        return scripts[scripts.length - 1];
-    })(doc.getElementsByTagName('script'));
-    var main = node.getAttribute('data-main');
     var anonymous_queue = [];
     var settings = {
-        doLoadModules: false,
         debug: true,
         maxTries: 50, 
-        waitPeriod: 50, 
-        baseUrl: (function (href) {
-            var place = href.split('/').slice(0, 3).join('/');
-            var path;
-            if (main) {
-                if (main.slice(0, place.length) === place) {
-                    path = main;
-                }
-                else if (main[0] === '/') {
-                    path = place + main;
-                }
-                else {
-                    path = href.slice(0, href.lastIndexOf('/') + 1) + main;
-                }
-                main = main.slice(main.lastIndexOf('/') + 1);
-            }
-            else {
-                path = href;
-            }
-            return path.slice(0, path.lastIndexOf('/') + 1);
-        })(global.location.href.split('?')[0])
+        waitPeriod: 50
     };
     var exports = {};
 
@@ -65,8 +38,8 @@
         }
 
         if (!id) {
-            anonymous_queue.push([dependencies, factory]);
-            return;
+            id = "anonymous_" + Math.random();
+            id.anonymous = true;
         }
 
         settings.debug && console && console.log && console.log("Starting definition of AMD module: " + id);
@@ -81,7 +54,11 @@
                 handlers = exports[id].handlers;
                 context = exports[id].context;
             }
-            module = exports[id] = typeof factory === 'function' ? factory.apply(null, anonymous_queue.slice.call(arguments, 0)) || exports[id] || {} : factory;
+            module = typeof factory === 'function' ? factory.apply(null, anonymous_queue.slice.call(arguments, 0)) || exports[id] || {} : factory;
+            if (!id.anonymous) {
+                exports[id] = module;
+            }
+            
             module.tinyamd = 2;
             module.context = context;
             for (var x = 0, xl = handlers ? handlers.length : 0; x < xl; x++) {
@@ -111,9 +88,7 @@
                     var _require = function (new_module, callback) {
                         return require(new_module, callback, context);
                     };
-                    _require.toUrl = function (module) {
-                        return toUrl(module, context);
-                    };
+
                     loaded_modules[x] = _require;
                     loaded_count++;
                     break;
@@ -123,8 +98,7 @@
                     break;
                 case 'module':
                     loaded_modules[x] = {
-                        id: context,
-                        uri: toUrl(context)
+                        id: context
                     };
                     loaded_count++;
                     break;
@@ -146,8 +120,6 @@
     }
 
     function load(module, callback, context) {
-        module = context ? toUrl(module, context) : module;
-
         if (exports[module]) {
             if (exports[module].tinyamd === 1) {
                 callback && exports[module].handlers.push(callback);
@@ -166,7 +138,7 @@
         }
 
         var moduleLoaded = function () {
-            settings.debug && console.log("AMD module loaded " + module);
+            settings.debug && console.log("AMD module loaded: " + module);
 
             var queue_item;
             if (queue_item = anonymous_queue.shift()) {
@@ -175,36 +147,7 @@
             }
         };
 
-        if (!settings.doLoadModules) {
-            waitForLoad(module, moduleLoaded);
-        } else {
-            inject(toUrl(module) + '.js', moduleLoaded);
-        }
-    };
-
-    var toUrl = require.toUrl = function (id, context) {
-        var new_context, i, changed;
-        switch (id) {
-            case 'require':
-            case 'exports':
-            case 'module':
-                return id;
-        }
-        new_context = (context || settings.baseUrl).split('/');
-        new_context.pop();
-        id = id.split('/');
-        i = id.length;
-        while (--i) {
-            switch (id[0]) {
-                case '..':
-                    new_context.pop();
-                case '.':
-                case '':
-                    id.shift();
-                    changed = true;
-            }
-        }
-        return (new_context.length && changed ? new_context.join('/') + '/' : '') + id.join('/');
+        waitForLoad(module, moduleLoaded);
     };
 
     function waitForLoad(module, callback) {
@@ -222,46 +165,27 @@
         }
         checkLoading();
     }
-
-  	//TODO: this is for dynamic loading, probably not needed
-    function inject(file, callback) {
-        var script = doc.createElement('script');
-        script.onload = script.onreadystatechange = function () {
-            if (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') {
-                script.onload = script.onreadystatechange = null;
-                el_head.removeChild(script);
-                callback && callback();
-            }
-        };
-        script.type = 'text/javascript';
-        script.async = true;
-        script.src = file;
-        el_head.appendChild(script);
-    };
-  
+    
     function shim(moduleName, exportedSymbol) {
-      function attemptRegister() {
-        if (window[exportedSymbol]) {
-          tinyamd.define(moduleName, function() { return window[exportedSymbol]; });
-          //TODO: unregister corresponding global?
-        } else {
-          setTimeout(attemptRegister, settings.waitPeriod);
-        }
-        
-      }
-      
-      attemptRegister();
-    }
+        function attemptRegister() {
+            if (window[exportedSymbol]) {
+                tinyamd.define(moduleName, function () { return window[exportedSymbol]; });
+                //TODO: unregister corresponding global?
+            } else {
+                setTimeout(attemptRegister, settings.waitPeriod);
+            }
 
+        }
+
+        attemptRegister();
+    }
+    
     global.tinyamd = {
         config: config,
-        inject: inject,
         define: global.define = define,
         require: global.require = require,
         exports: exports,
-      	shim: shim
+        shim: shim
     };
-
-    main && require([main]);
 
 })(this);

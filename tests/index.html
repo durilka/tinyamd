@@ -5,11 +5,12 @@
   <script type="text/javascript" src="tinyamdx.js"></script>  
   <script type="text/javascript">
     define('globals', function() {
-      tinyamd.shim('jquery', '$');
+      tinyamd.shim('jquery', '$'); //not really needed, jquery is AMD aware
     });
   </script>
 </head>
 <body>
+  <span id="result">(-■_■)</span>
   
   <script type="text/javascript" src="main.js"></script>    
   <script type="text/javascript" src="module1.js"></script>    
